@@ -5,12 +5,18 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
 
+    class Meta:
+        ordering = ['name']  # Add this line
+
     def __str__(self):
         return self.name
 
 class Location(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['name']  # Add this line
 
     def __str__(self):
         return self.name
