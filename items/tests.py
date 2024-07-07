@@ -3,8 +3,20 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from items.models import Category, Location, Item
 
+from rest_framework.test import APIClient
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+import tempfile
+from PIL import Image
+
 class CategoryTests(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.token = Token.objects.create(user=self.user)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         self.valid_payload = {
             'name': 'Test Category',
             'description': 'Test Category Description'
@@ -30,6 +42,10 @@ class CategoryTests(APITestCase):
 
 class LocationTests(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.token = Token.objects.create(user=self.user)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         self.valid_payload = {
             'name': 'Test Location',
             'description': 'Test Location Description'
@@ -51,11 +67,15 @@ class LocationTests(APITestCase):
         self.assertEqual(len(response.data['results']), 2)  # Check 'results' key
         self.assertEqual(response.data['count'], 2)  # Check total count
 
-# Add tests for Item
 class ItemTests(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        self.token = Token.objects.create(user=self.user)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         self.category = Category.objects.create(name="Test Category")
         self.location = Location.objects.create(name="Test Location")
+        self.image = self.create_temporary_image()
         self.valid_payload = {
             'name': 'Test Item',
             'description': 'Test Description',
@@ -65,6 +85,14 @@ class ItemTests(APITestCase):
             'location': self.location.id,
             'is_available': True
         }
+    def create_temporary_image(self):
+        # Create a new image file
+        image = Image.new('RGB', (100, 100))
+        tmp_file = tempfile.NamedTemporaryFile(suffix='.jpg')
+        image.save(tmp_file, 'jpeg')
+        tmp_file.seek(0)
+        return tmp_file
+
 
     def test_create_item(self):
         """
@@ -75,6 +103,15 @@ class ItemTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Item.objects.count(), 1)
         self.assertEqual(Item.objects.get().name, 'Test Item')
+
+    def test_create_item_with_image(self):
+        url = reverse('item-list')
+        data = self.valid_payload.copy()
+        data['image'] = self.image
+        response = self.client.post(url, data, format='multipart')
+        print(response.content)  # Keep this line for debugging
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(Item.objects.get().image)
 
     def test_get_items(self):
         """
