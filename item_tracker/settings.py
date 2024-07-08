@@ -162,4 +162,4 @@ import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.37']  # Replace with your computer's local IP address
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.19']  # Replace with your computer's local IP address
