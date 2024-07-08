@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.test import APITestCase
 from items.models import Category, Location, Item
@@ -109,9 +110,10 @@ class ItemTests(APITestCase):
         data = self.valid_payload.copy()
         data['image'] = self.image
         response = self.client.post(url, data, format='multipart')
-        print(response.content)  # Keep this line for debugging
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIsNotNone(Item.objects.get().image)
+        item = Item.objects.get()
+        self.assertIsNotNone(item.image)
+        self.assertTrue(item.image.name.startswith(f'item_images/{slugify(item.name)}'))
 
     def test_get_items(self):
         """
