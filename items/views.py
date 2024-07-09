@@ -8,6 +8,27 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Count
 
+# 4. (Optional) Create a custom token view
+# In your app's views.py
+
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims
+        token['username'] = user.username
+        # ... add other claims
+        return token
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+# If you create this custom view, update urls.py to use it:
+# path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
